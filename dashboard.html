@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Dashboard</title>
+    <style>
+      /* Kills secret browser margins and prevents outer scrolling */
+      body { margin: 0; padding: 0; overflow: hidden; background-color: #640000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+      /* Removes ugly outlines on clicked buttons */
+      button:focus { outline: none; }
+      /* Module hidden class */
+      .hidden { display: none !important; }
+
+      /* --- NEW: ACTIVE COLUMN GLOW --- */
+      .active-column-glow {
+        outline: 4px solid #ffdb58 !important; 
+        box-shadow: 0 0 15px rgba(255, 219, 88, 0.8) !important;
+        position: relative; /* Ensures the glow sits on top of other elements */
+        z-index: 5;
+      }
+
+      /* --- MASTER VARIABLES --- */
+      :root {
+        /* Change your background image here ONCE */
+        --dashboard-bg: url('https://www.dropbox.com/scl/fi/ew87xpwo60yfd62j45m8a/DBG.png?rlkey=hscg1vfrhxi269sbw8jjuluu9&st=4heoqij8&raw=1');
+      }
+
+      /* --- MASTER COLUMN BLUEPRINT --- */
+      .dashboard-column {
+        /* 1. The Background Grout & Readability Shield */
+        background-image: linear-gradient(rgba(77, 77, 77, 0.7), rgba(52, 52, 52, 0.7)), var(--dashboard-bg);
+        background-size: cover; 
+        background-position: center; 
+        background-attachment: fixed;
+        
+        /* 2. The Physical Box */
+        border: 1px solid #dee2e6; 
+        border-radius: 8px; 
+        padding: 10px; 
+        
+        /* 3. The Layout Engine & Animations */
+        display: flex; 
+        flex-direction: column; 
+        transition: outline 0.2s, box-shadow 0.2s;
+      }
+    </style>
+</head>
+<body>
+
+<div id="imageModal" onclick="closeModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.85); z-index: 9999; justify-content: center; align-items: center; cursor: pointer;">
+  <img id="modalImage" src="" style="width: 95vw; height: 95vh; object-fit: contain; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" alt="Fullscreen Meme" />
+  
+  <div id="modalTextOverlay" style="position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%); color: #ffffff; font-size: 100px; font-weight: bold; font-family: 'Comic Sans MS', monospace; text-shadow: 4px 4px 0 #000, -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 0px 8px 15px rgba(0,0,0,0.8); pointer-events: none; display: none; text-align: center;"></div>
+</div>
+
+<div style="display: flex; height: 100vh; max-height: 100vh; padding: 8px; box-sizing: border-box; gap: 10px; background-color: #640000;">
+  
+<div id="leftColumn" onclick="setActiveColumn('leftColumn')" class="dashboard-column active-column-glow" style="flex: 1; overflow-y: auto;">
+  <h3 style="margin: 0 0 10px 0; text-align: center; color: #333; position: sticky; top: 0; background: #f8f9fa; padding-bottom: 5px;">Teacher Tools</h3>
+       <div style="position: sticky; top: 0; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #dee2e6; z-index: 10;">
+     <button onclick="toggleLights()" style="width: 100%; background: #4c5966; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 15px; font-size: 14px;">
+        🌙 Dim Lights
+      </button>
+      <div style="display: flex; flex-direction: column; gap: 1px;">
+        <label style="font-weight: bold; color: #333; font-size: 14px;">Level:
+          <select id="levelSelect" onchange="updateLessons()" style="width: 100%; font-size: 14px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer;">
+            <option value="level">✨ Select Level</option>
+	          <option value="1A">1A</option>
+            <option value="1B">1B</option>
+            <option value="2A">2A</option>
+            <option value="2A">2A</option>
+            <option value="2B">2B</option>
+            <option value="3A">3A</option>
+            <option value="3B">3B</option>
+            <option value="4A">4A</option>
+            <option value="4B">4B</option>
+            <option value="5A">5A</option>
+            <option value="5B">5B</option>
+            <option value="6A">6A</option>
+            <option value="6B">6B</option>
+            </select>
+        </label>
+        
+<label style="font-weight: bold; color: #333; font-size: 14px;">Lesson:
+          <select id="lessonSelect" onchange="changeLesson(this.value)" style="width: 100%; font-size: 14px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer;">
+          </select>
+        </label>
+
+        <label style="font-weight: bold; color: #333; font-size: 14px;">Sheets:
+          <select id="suppSelect" onchange="document.getElementById('suppFrame').src=this.value" style="width: 100%; font-size: 14px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer;">
+             <option value="">Select Supplemental File...</option>
+          </select>
+        </label>
+        
+      </div>
+    </div>  
+    
+    <div id="memeButtonContainer" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 15px;">
+    </div>
+<div style="display: flex; justify-content: center; align-items: center; gap: 20px; width: 100%; margin-bottom: 15px; flex-shrink: 0;">
+  <button style="font-size: 60px; background: transparent; border: none; cursor: pointer; padding: 0; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="triggerMemonade('https://www.dropbox.com/scl/fi/r7z4gl89hobrh3ft4kf6o/Memo.jpg?rlkey=k3cf5ruxd91mmm20t0t45upky&st=tt1pgz2h&raw=1')">📘</button>
+  
+  <img src="PASTE_SHEETS_ICON_DROPBOX_LINK?raw=1" onclick="switchModule('moduleA')" style="width: 55px; height: 55px; cursor: pointer; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Supplemental Sheets" alt="Sheets" />
+  
+  <img src="PASTE_RACE_ICON_DROPBOX_LINK?raw=1" onclick="switchModule('moduleB')" style="width: 55px; height: 55px; cursor: pointer; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Name Picker Race" alt="Race Game" />
+
+</div>
+
+<div style="flex-grow: 1; flex-shrink: 0; border: 1px solid #dee2e6; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; ... ">
+          <h2 style="margin: 0 0 10px 0; color: #ffffff; text-shadow: 1px 1px 3px rgba(81, 1, 1, 0.9);">Activity Stopwatch</h2>
+        <div id="stopwatchDisplay" style="font-size: 40px; font-family: monospace; font-weight: bold; margin-bottom: 15px; color: #ffffff; text-shadow: 2px 2px 4px rgba(96, 0, 0, 0.9);">
+            00:00.00
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="startStopwatch()" style="padding: 8px 14px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Start</button>
+            <button onclick="stopStopwatch()" style="padding: 8px 14px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Stop</button>
+            <button onclick="resetStopwatch()" style="padding: 8px 14px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Reset</button>
+        </div>
+        <div style="margin-top: 20px; text-align: center; border-top: 1px solid #ccc; padding-top: 10px;">
+      <p style="margin: 0 0 8px 0; font-size: 24px; color: #ffffff; font-weight: bold;">Homework Penalties</p>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+        <button onclick="changePenalty(-1)" style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 12px; font-size: 16px; cursor: pointer;">-</button>
+<span id="penaltyDisplay" style="font-size: 20px; font-weight: bold; min-width: 100px; white-space: nowrap; text-align: center; color: #FFFFFF;">0 (+0s)</span>
+        <button onclick="changePenalty(1)" style="background: #ffc107; color: black; border: none; border-radius: 4px; padding: 5px 12px; font-size: 16px; cursor: pointer;">+</button>
+      </div>
+      <div style="margin-top: 15px; background: #e9ecef; border: 1px solid #ced4da; border-radius: 8px; padding: 12px; text-align: center;">
+      <p style="margin: 0 0 5px 0; font-size: 14px; color: #555;">Presentation Time: <span id="rawTimeDisplay" style="font-weight: bold; color: #333;">0s</span></p>
+      <p style="margin: 0 0 5px 0; font-size: 14px; color: #dc3545;">Homework Penalty: <span id="penaltyTimeDisplay" style="font-weight: bold;">+0s</span></p>
+      <hr style="border: 0; border-top: 1px solid #ccc; margin: 8px 0;">
+      <p style="margin: 0; font-size: 16px; font-weight: bold; color: #28a745;">Total Time Score: <span id="finalScoreDisplay">0s</span></p>
+    </div>
+    
+    </div>
+    </div>
+  </div>
+
+<div id="centerColumn" onclick="setActiveColumn('centerColumn')" class="dashboard-column" style="flex: 2.5; align-items: center; overflow-y: hidden;">
+    
+    <div style="flex-grow: 1; width: 100%; height: 100%; display: flex; justify-content: center;">
+        <iframe id="lessonFrame" src="" style="width: 100%; height: 100%; max-width: 1100px; border: none; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" allowfullscreen="true"></iframe>
+    </div>
+
+  </div>
+
+<div id="rightColumn" onclick="setActiveColumn('rightColumn')" class="dashboard-column" style="flex: 1; align-items: center; overflow-y: auto;">
+  
+
+<div id="moduleA" style="display: flex; flex-direction: column; width: 100%; height: 100%;">
+        <div style="flex-grow: 1; width: 100%;">
+            <iframe id="suppFrame" src="" style="width: 100%; height: 100%; border: none; background: transparent; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></iframe>
+        </div>
+    </div>
+    <div id="moduleB" class="hidden" style="width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; background: #e9ecef; border: 1px dashed #adb5bd; border-radius: 4px;">
+        <h4 style="color: #6c757d; text-align: center;">Name Picker Race<br><span style="font-size: 12px; font-weight: normal;">(Pending Sprites)</span></h4>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// --- PASTE THIS ENTIRE BLOCK INTO YOUR HTML <script> SECTION ---
+
+const lessonData = {
+  "1A": [
+    {
+      "name": "Unit 1 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1H68JNacSi1op6xgKAcSg-UIIYXcqYxbw/embed"
+    },
+    {
+      "name": "Unit 1 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1pulnigq0xAlYq1r2FZ862rSIeBIw14Yh/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1YwoGoAMhfErAmSvrOB3dk7b1htdiiusW/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1xVNxFB8FaT9Q973POvb5saLaJN9_65TH/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1LS68SGJYFdZaFCDH0JdaXYq3aATqP48M/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1G39Erx_aex6bRbn2G_wtT5zdL34qjUyD/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1aEliBWGYQcIRRs0pxfSreKw1RFWro2SK/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1aEliBWGYQcIRRs0pxfSreKw1RFWro2SK/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1qdt5h7ShFSLjY6eJR2ZFf0REOc-ngFVt/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/12RUt_PDMkMbFp3w4jL9XuEXyeTWH4W9G/embed"
+    }
+  ],
+  "1B": [
+    {
+      "name": "Unit 6 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/14yyk6Q78n40JQtaLvzs-qLjKTu7AnVfi/embed"
+    },
+    {
+      "name": "Unit 6 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1EP1i2iCEakiwE2cHZFrdP_8OPUeNjheO/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/15ZT8DTNd2p5mLRM8ZkMqqCq_bmZ4IgVs/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1kcMFfiyLGR_x8BBo_UXCAwhrOA9mVT5f/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1HiXXeOqwQXw7r-lPVqsHlA_vpT8b3JbT/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1g_Qc4UVHe8oddQ0WP_iGitPzj6f92Egj/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1NH9t8tEHpnKV4fjxAHGoq7UorbsARgtv/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/10iESh2knx7B6hnzurkU49-B50O2XYRzW/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1z30kK4aFCgz3j_JFmMmrWwmbvb5Mk40w/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1LIKUKUoifrk1dIw7uq1rKK0aMjCbyJ0K/embed"
+    }
+  ],
+  "2A": [
+    {
+      "name": "Unit 1 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1ceInHb9O76EjJb1Nn-of7qEWYlDdFuj8/embed"
+    },
+    {
+      "name": "Unit 1 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1I_53e27flkqMedrP-fZGwa1L8Ic1KZ46/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1fCzGWmNfekvbQfu1rXkfGY-s0HbToUqW/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1rfXrpm66dCx7vN8mifbuoPpnBwABS4_Z/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1lb_cPKKuvbUHXDZCBewFhHAHEgSN7T-y/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/16Z__gs3xsBq1upJ2xwNP1aWNwOnZo42f/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1858KCRsm5x7A3SMTCvZBVR1kVYvJnFq5/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1vb8U2J0_CgiYiCThtqGf0ykzKCQ-SQEn/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1xs5BirGaJu5I8HHQcfX3vPE93wXIUsnk/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1uLClS_frSRnbNOU13pDjG0I9Hq4aiwen/embed"
+    }
+  ],
+  "2B": [
+    {
+      "name": "Unit 6 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1c7_OZiOWQz9j3FtKsaDebqhmKC_8Yijh/embed"
+    },
+    {
+      "name": "Unit 6 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1Hw0gqh45rhCEzJD2mauyZc3-doaFuqIj/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1kPvFaMUTOu4vH4mcZXa5UzVkq7Dcim5C/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1lVK5edikQReucwcgknhPIsftDoQtyveM/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1I6p-nVsq7WL0jWOjECqsh-2jukt8xf-H/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1NQgiLe76S_jzhfuKtmAA7wTtzbgrdUeJ/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1rSFjt8zgMlMO11lK9YGACTif_vSpzyJ2/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1e9uL-CI6DiugSu-W9EuzqcjWwxKJPuYj/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1yJKbbEGm48MFgA3OaU_Bezn0onkW__xw/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1-rC6OX16RXig3WR7C7sfUYSiRDepGpEY/embed"
+    }
+  ],
+  "3A": [
+    {
+      "name": "Unit 1 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1B-ocsbwQ991Un9f3gMhv_bWKyq8FpAUJ/embed"
+    },
+    {
+      "name": "Unit 1 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1-GrGVYK6XUVeBZoiIIN7vl5kQaV83tuZ/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1q0_EWmismRTdvFyIlOQlLEhX18rcqjjk/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1Z1an4Xh0wP5NEKIqt7LIwqF08A_bftjr/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/12KsxQ_ci9QardDmpPhDtzXF9wqhq7qoR/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1SSX7b0cKfbULJnqbxdR5-n3RGNZiyAwh/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1KlDgOfNKN-S__RmaiPFI2YNmDNlt3qAS/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1JHv_hXSkgObVFCkRcx2BjjfKiZ3aJeoa/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1jp1Q-_5TmTWfB0LYOygAJ4Ww8rY5rbCc/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1uJLT76JHISaBXhDrgjjb2zZvlKh-6HfV/embed"
+    }
+  ],
+  "3B": [
+    {
+      "name": "Unit 6 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/11pNRgJdR2PLzkey32Y75vOstZcwd2HQ6/embed"
+    },
+    {
+      "name": "Unit 6 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1RdvsmwUw-P87JX5qpPzRyyxUqbqG1x1M/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1Uzss30RxNeCYkT5ZFAqxqeIw1lHcAMRN/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1NuWX4gE6ScBxYHXFWLDHHwKE6OUBVhCe/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1qoR83S9j8vaMTJQogCCT8uHL8Z4yITCS/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1DfzdADwAjbF9SbqAkcjL-eaQYy6AlWjH/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1tM_E3wP71JhPgnjfWM8SWUrOl4yLLOHS/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1TJ0hwD4Xh1Zv2QGuQ023LUrChnNlZ4So/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/12U5UbwBj7amsZj-4gWfQVvLDUKjufOEf/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1NSUh-uGGJWi5NBel79Ko_sA-XBHrtL9G/embed"
+    }
+  ],
+  "4A": [
+    {
+      "name": "Unit 1 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1EK4RZK7zhWn0-h-BKhvGNWlt6Yl_1koR/embed"
+    },
+    {
+      "name": "Unit 1 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1fPjMN1c3UFPqsz8zvI6X7OlvpeaIAPrR/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1h3OdqeS7Hy-L66PROtpzXHmzLqBPy3V2/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1XxREmKDOGq1ckm2eC98z6SjbJe_yAebw/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/10YB77WFGKVKKn-BmKhph6bpOeALp0RgB/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1x7OWCIMJQemp4r-aZ8V-AOPbHQ8F_nnl/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1JKAvdTvTAHRtf8_IIfDZOuVPs6FX6DHK/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1eoXjnB7e6Uz_gfBk-t4ZIrb-EVNOW56-/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/17avsyjFOawuGCkwxcmGa2o0IBYfOYFhl/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1Dkix0wecBLiGm9kR_V9wQuMegIQrh9XG/embed"
+    }
+  ],
+  "4B": [
+    {
+      "name": "Unit 6 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/197mlC2pVxzTVdtYAN3uICMI5GiCoxR6_/embed"
+    },
+    {
+      "name": "Unit 6 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1XGyOaYivauYFIgxgAw2YMEuMAuOMrLC8/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1BuMxm8ZTJAgLqIMMMbfXmVt23uNAyLZI/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/12YGrDWZin19cvP-MJipBcs2wyBgkVo6B/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1SWaxLI5Ww5jmal5LkxRkgAihEVZk3Xrr/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1H6o4eju14zFgLSZKSfor_qVGNEs4Drd3/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1gAsXBb73grzidd0YHnnkUVmu8LgkfVdf/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1dUSL4uzHoxFBIZr02NrjyXzC0dEOpZPH/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/103ibXZBxrUIqpjIXzYT3Lru9GEp1_tIy/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1AXfZyjnazhLmszEo3FG3LpKDAvRFMgbj/embed"
+    }
+  ],
+  "5A": [
+    {
+      "name": "Unit 1 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1FP-BfcuGdd_xfodaFp-0bpvYI_iJQJfQ/embed"
+    },
+    {
+      "name": "Unit 1 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1uPdi32LWWBpzkApzk1nknwunPet_zANp/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1nHj-RZgPchMBVvYIUiuCgWCEQUBOdPWj/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1mzNONciFWSj8iEYriG9REm2WAvIcaBqO/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/18osLU6u1eE2_v5nnuR4dIhyxEfbGuuDI/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1yFpxus1gDyj6xHUKrFhZbx9m6_udeMK2/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/16BzfgBd3ccbwsRvr8o40Hf8NfUnlyYwb/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1cn6AbEoHFz-uIKXuUSuV57oc3R4MRq_K/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1MaygaYjqDpsjW7S6RTiMWnX-bu1nyv-C/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1fZFAvZIKu80H9rk7pyhycsDAse44bXnV/embed"
+    }
+  ],
+  "5B": [
+    {
+      "name": "Unit 6 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1BTz6wO1-8Ib9SxmADuJn57xXtJVFpj5D/embed"
+    },
+    {
+      "name": "Unit 6 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/18dgaqFe0I6O8uSwT8rsRlncZPE2tsNe6/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1uRRcEHbjFw6GRGnjlIkjfjAuCLJ-6yb7/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1YhV4dz3FmHv3A6CXaF92uxkau2BKkkW-/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/10rRCa2IQdDImOPtDHOkQNpnLizaoWtvB/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1fcR8lNdQuQDB1eAawPdJuG9av27oiRPA/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/15oqIcYpQRM_pu2QC5LVDNlgC_m0KD2zK/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/17DiGvCvH3PtZnk1xGi0nFquCpDzwb7U9/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1DiK2k1lJmkIOcBGyxGk2IJzFLrd6YJAM/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/12OK5yifnrkHM-ItX6X8jQvnb6_V4St-v/embed"
+    }
+  ],
+  "6A": [
+    {
+      "name": "Unit 1 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1gwNHfD-KiZdmF0X7ZeX9J0F37C_Np64k/embed"
+    },
+    {
+      "name": "Unit 1 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1zvKdKNHkH_NQJM6OkjYtXIH_DYZoBZLV/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/10UIlHPIZ1EgBQQQFZ6oWZKrckfmDqhGX/embed"
+    },
+    {
+      "name": "Unit 2 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/10zzVoGqibqesfMbbrRlcSFSzEC88H5Tq/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1pI9LKTbTzcdbQ72rJQJA3p49zeXTqQuF/embed"
+    },
+    {
+      "name": "Unit 3 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/17Fw0zERAnCPh9KODHpR_QjZTW5F7h5T4/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1by3N0i5WftLGqledIjJMqxKNEnMTaMIN/embed"
+    },
+    {
+      "name": "Unit 4 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1fGcBSFKrGS9h4ZFpkB1LWzfMQRS0X1jM/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1AOlysNaeoyLXvz36Jzquin9W4jDQilKr/embed"
+    },
+    {
+      "name": "Unit 5 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1fwQZkk_I_M0Wbu8dY5awRLhOwpGd2b_0/embed"
+    }
+  ],
+  "6B": [
+    {
+      "name": "Unit 6 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1uiBYF2L4KDgUjjSVMvEYBIUKfaHtcMzd/embed"
+    },
+    {
+      "name": "Unit 6 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/18y7Bt3D8Xe7QB3IeFemNo1eB9JQDK75X/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1-zpkD95F7Qoo_OWTp7IWTJRuTP226UK5/embed"
+    },
+    {
+      "name": "Unit 7 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/14Hp44aIuUq3dfDnLy8FlIUHSWEsVMyXt/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1VoqCx1fOdpZYwNlHl0nMd-mNJDiQGfs3/embed"
+    },
+    {
+      "name": "Unit 8 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1pBnF9ANZdqOkwpugQSSZLFkPTzyNnkBS/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1at-fEQdkLhrinLgTfKObrx9FyS00xqcN/embed"
+    },
+    {
+      "name": "Unit 9 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/16jbiH5H-JfH0es5vfzQdyluvd7g0GYEj/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 1",
+      "url": "https://docs.google.com/presentation/d/1B4jIog8xqfD06QBbIgSt6FwRX4eRbSKE/embed"
+    },
+    {
+      "name": "Unit 10 Lesson 2",
+      "url": "https://docs.google.com/presentation/d/1116mUv3ShkCVMhzu6BHGyCVhW2fIloya/embed"
+    }
+  ]
+};
+
+const memeData = [
+  {
+    "name": "PB",
+    "url": "https://www.dropbox.com/scl/fi/zbl67ki66l5xh0a1fnp4q/PB.jpg?rlkey=k6t6r664s5xy2fpcg1ice5tah&st=505j86ba&raw=1",
+    "shortcut": "1"
+  },
+  {
+    "name": "ㅈㅈ",
+    "url": "https://www.dropbox.com/scl/fi/jonbny7knjeecqn3zza34/Attention.jpg?rlkey=twakx7pn060rybn8w01r6lhj5&st=8rpyc2vz&raw=1",
+    "shortcut": "2"
+  },
+  {
+    "name": "PD",
+    "url": "https://www.dropbox.com/scl/fi/y4v464sskjm7nd7e5uhbi/PencilDown.jpg?rlkey=ac3yftce9qk2ok4getrrdif71&st=egyt6wmh&raw=1",
+    "shortcut": "3"
+  },
+  {
+    "name": "PU",
+    "url": "https://www.dropbox.com/scl/fi/ifhx9l8e4855lg4cnrabr/PencilUp.jpg?rlkey=pw3hqyc0m04wmnd7dogul8xqq&st=1qs7oabu&raw=1",
+    "shortcut": "4"
+  },
+  {
+    "name": "CA",
+    "url": "https://www.dropbox.com/scl/fi/etkcdkfbr29owbdgbtko5/ChickenAnswer.jpg?rlkey=o4d93qu7tggn3hw7edo73o7ue&st=80gftbxr&raw=1",
+    "shortcut": "5"
+  },
+  {
+    "name": "S",
+    "url": "https://www.dropbox.com/scl/fi/4yevpu4va9ssd0mmfd4bc/S.jpg?rlkey=icf8p74baegph0dlzfwtmvimm&st=dydgb64d&raw=1",
+    "shortcut": "6"
+  },
+  {
+    "name": "CL",
+    "url": "https://www.dropbox.com/scl/fi/w2ajdoqhro2eoqs1k0xph/CapitalLetter.jpg?rlkey=d0xgplmx1lj9taasue6e4aqdu&st=inhhb6cw&raw=1",
+    "shortcut": "7"
+  },
+  {
+    "name": "DBS",
+    "url": "https://www.dropbox.com/scl/fi/l4c5pm0j6h1zxdwnl9v7k/DBSBD2.jpg?rlkey=lqncl0srwgjsud016t169hf0m&st=hnha5xjy&raw=1",
+    "shortcut": "8"
+  }
+];
+
+const stopwatchData = {
+  "1A": [
+    {
+      "tier": 2,
+      "maxSeconds": 35,
+      "url": "https://www.dropbox.com/scl/fi/zjv1tzzliacc2lvr3fmeg/2Stickers.jpg?rlkey=lzodgyctwbn1ao03em9zcg1wr&st=glyacksq&raw=1"
+    },
+    {
+      "tier": 1,
+      "maxSeconds": 60,
+      "url": "https://www.dropbox.com/scl/fi/uw4bv9phwt6bsy1r0ejwh/1Sticker.jpg?rlkey=kf4i0e86wwuhrc69are87h6tk&st=fnnh2ee6&raw=1"
+    },
+    {
+      "tier": 0,
+      "maxSeconds": 90,
+      "url": "https://www.dropbox.com/scl/fi/r6rmmwvqpfuytw5af27z7/Donut.jpg?rlkey=m0cxspqefhfe7vf5o3ojidlgo&st=uenghmz9&raw=1"
+    },
+    {
+      "tier": -1,
+      "maxSeconds": 999,
+      "url": "https://www.dropbox.com/scl/fi/4iogg3n215pwedcp474ie/OKB.jpg?rlkey=wpnrqcsvx710zpef25ndueh3j&st=q3k13ave&raw=1"
+    }
+  ],
+  "1B": [
+    {
+      "tier": 2,
+      "maxSeconds": 35,
+      "url": "https://www.dropbox.com/scl/fi/zjv1tzzliacc2lvr3fmeg/2Stickers.jpg?rlkey=lzodgyctwbn1ao03em9zcg1wr&st=glyacksq&raw=1"
+    },
+    {
+      "tier": 1,
+      "maxSeconds": 60,
+      "url": "https://www.dropbox.com/scl/fi/uw4bv9phwt6bsy1r0ejwh/1Sticker.jpg?rlkey=kf4i0e86wwuhrc69are87h6tk&st=fnnh2ee6&raw=1"
+    },
+    {
+      "tier": 0,
+      "maxSeconds": 90,
+      "url": "https://www.dropbox.com/scl/fi/r6rmmwvqpfuytw5af27z7/Donut.jpg?rlkey=m0cxspqefhfe7vf5o3ojidlgo&st=uenghmz9&raw=1"
+    },
+    {
+      "tier": -1,
+      "maxSeconds": 999,
+      "url": "https://www.dropbox.com/scl/fi/4iogg3n215pwedcp474ie/OKB.jpg?rlkey=wpnrqcsvx710zpef25ndueh3j&st=q3k13ave&raw=1"
+    }
+  ],
+  "2A": [
+    {
+      "tier": 2,
+      "maxSeconds": 30,
+      "url": "https://www.dropbox.com/scl/fi/zjv1tzzliacc2lvr3fmeg/2Stickers.jpg?rlkey=lzodgyctwbn1ao03em9zcg1wr&st=glyacksq&raw=1"
+    },
+    {
+      "tier": 1,
+      "maxSeconds": 60,
+      "url": "https://www.dropbox.com/scl/fi/uw4bv9phwt6bsy1r0ejwh/1Sticker.jpg?rlkey=kf4i0e86wwuhrc69are87h6tk&st=fnnh2ee6&raw=1"
+    },
+    {
+      "tier": 0,
+      "maxSeconds": 90,
+      "url": "https://www.dropbox.com/scl/fi/r6rmmwvqpfuytw5af27z7/Donut.jpg?rlkey=m0cxspqefhfe7vf5o3ojidlgo&st=uenghmz9&raw=1"
+    },
+    {
+      "tier": -1,
+      "maxSeconds": 999,
+      "url": "https://www.dropbox.com/scl/fi/4iogg3n215pwedcp474ie/OKB.jpg?rlkey=wpnrqcsvx710zpef25ndueh3j&st=q3k13ave&raw=1"
+    }
+  ],
+  "2B": [
+    {
+      "tier": 2,
+      "maxSeconds": 30,
+      "url": "https://www.dropbox.com/scl/fi/zjv1tzzliacc2lvr3fmeg/2Stickers.jpg?rlkey=lzodgyctwbn1ao03em9zcg1wr&st=glyacksq&raw=1"
+    },
+    {
+      "tier": 1,
+      "maxSeconds": 60,
+      "url": "https://www.dropbox.com/scl/fi/uw4bv9phwt6bsy1r0ejwh/1Sticker.jpg?rlkey=kf4i0e86wwuhrc69are87h6tk&st=fnnh2ee6&raw=1"
+    },
+    {
+      "tier": 0,
+      "maxSeconds": 90,
+      "url": "https://www.dropbox.com/scl/fi/r6rmmwvqpfuytw5af27z7/Donut.jpg?rlkey=m0cxspqefhfe7vf5o3ojidlgo&st=uenghmz9&raw=1"
+    },
+    {
+      "tier": -1,
+      "maxSeconds": 999,
+      "url": "https://www.dropbox.com/scl/fi/4iogg3n215pwedcp474ie/OKB.jpg?rlkey=wpnrqcsvx710zpef25ndueh3j&st=q3k13ave&raw=1"
+    }
+  ],
+  "3A": [
+    {
+      "tier": 2,
+      "maxSeconds": 35,
+      "url": "https://www.dropbox.com/scl/fi/zjv1tzzliacc2lvr3fmeg/2Stickers.jpg?rlkey=lzodgyctwbn1ao03em9zcg1wr&st=glyacksq&raw=1"
+    },
+    {
+      "tier": 1,
+      "maxSeconds": 60,
+      "url": "https://www.dropbox.com/scl/fi/uw4bv9phwt6bsy1r0ejwh/1Sticker.jpg?rlkey=kf4i0e86wwuhrc69are87h6tk&st=fnnh2ee6&raw=1"
+    },
+    {
+      "tier": 0,
+      "maxSeconds": 90,
+      "url": "https://www.dropbox.com/scl/fi/r6rmmwvqpfuytw5af27z7/Donut.jpg?rlkey=m0cxspqefhfe7vf5o3ojidlgo&st=uenghmz9&raw=1"
+    },
+    {
+      "tier": -1,
+      "maxSeconds": 999,
+      "url": "https://www.dropbox.com/scl/fi/4iogg3n215pwedcp474ie/OKB.jpg?rlkey=wpnrqcsvx710zpef25ndueh3j&st=q3k13ave&raw=1"
+    }
+  ],
+  "3B": [
+    {
+      "tier": 2,
+      "maxSeconds": 35,
+      "url": "https://www.dropbox.com/scl/fi/zjv1tzzliacc2lvr3fmeg/2Stickers.jpg?rlkey=lzodgyctwbn1ao03em9zcg1wr&st=glyacksq&raw=1"
+    },
+    {
+      "tier": 1,
+      "maxSeconds": 60,
+      "url": "https://www.dropbox.com/scl/fi/uw4bv9phwt6bsy1r0ejwh/1Sticker.jpg?rlkey=kf4i0e86wwuhrc69are87h6tk&st=fnnh2ee6&raw=1"
+    },
+    {
+      "tier": 0,
+      "maxSeconds": 90,
+      "url": "https://www.dropbox.com/scl/fi/r6rmmwvqpfuytw5af27z7/Donut.jpg?rlkey=m0cxspqefhfe7vf5o3ojidlgo&st=uenghmz9&raw=1"
+    },
+    {
+      "tier": -1,
+      "maxSeconds": 999,
+      "url": "https://www.dropbox.com/scl/fi/4iogg3n215pwedcp474ie/OKB.jpg?rlkey=wpnrqcsvx710zpef25ndueh3j&st=q3k13ave&raw=1"
+    }
+  ],
+  "4A": [
+    {
+      "tier": 2,
+      "maxSeconds": 40,
+      "url": "https://www.dropbox.com/scl/fi/zjv1tzzliacc2lvr3fmeg/2Stickers.jpg?rlkey=lzodgyctwbn1ao03em9zcg1wr&st=glyacksq&raw=1"
+    },
+    {
+      "tier": 1,
+      "maxSeconds": 60,
+      "url": "https://www.dropbox.com/scl/fi/uw4bv9phwt6bsy1r0ejwh/1Sticker.jpg?rlkey=kf4i0e86wwuhrc69are87h6tk&st=fnnh2ee6&raw=1"
+    },
+    {
+      "tier": 0,
+      "maxSeconds": 90,
+      "url": "https://www.dropbox.com/scl/fi/r6rmmwvqpfuytw5af27z7/Donut.jpg?rlkey=m0cxspqefhfe7vf5o3ojidlgo&st=uenghmz9&raw=1"
+    },
+    {
+      "tier": -1,
+      "maxSeconds": 999,
+      "url": "https://www.dropbox.com/scl/fi/4iogg3n215pwedcp474ie/OKB.jpg?rlkey=wpnrqcsvx710zpef25ndueh3j&st=q3k13ave&raw=1"
+    }
+  ],
+  "4B": [
+    {
+      "tier": 2,
+      "maxSeconds": 40,
+      "url": "https://www.dropbox.com/scl/fi/zjv1tzzliacc2lvr3fmeg/2Stickers.jpg?rlkey=lzodgyctwbn1ao03em9zcg1wr&st=glyacksq&raw=1"
+    },
+    {
+      "tier": 1,
+      "maxSeconds": 60,
+      "url": "https://www.dropbox.com/scl/fi/uw4bv9phwt6bsy1r0ejwh/1Sticker.jpg?rlkey=kf4i0e86wwuhrc69are87h6tk&st=fnnh2ee6&raw=1"
+    },
+    {
+      "tier": 0,
+      "maxSeconds": 90,
+      "url": "https://www.dropbox.com/scl/fi/r6rmmwvqpfuytw5af27z7/Donut.jpg?rlkey=m0cxspqefhfe7vf5o3ojidlgo&st=uenghmz9&raw=1"
+    },
+    {
+      "tier": -1,
+      "maxSeconds": 999,
+      "url": "https://www.dropbox.com/scl/fi/4iogg3n215pwedcp474ie/OKB.jpg?rlkey=wpnrqcsvx710zpef25ndueh3j&st=q3k13ave&raw=1"
+    }
+  ],
+  "5A": [
+    {
+      "tier": 2,
+      "maxSeconds": 45,
+      "url": "https://www.dropbox.com/scl/fi/zjv1tzzliacc2lvr3fmeg/2Stickers.jpg?rlkey=lzodgyctwbn1ao03em9zcg1wr&st=glyacksq&raw=1"
+    },
+    {
+      "tier": 1,
+      "maxSeconds": 70,
+      "url": "https://www.dropbox.com/scl/fi/uw4bv9phwt6bsy1r0ejwh/1Sticker.jpg?rlkey=kf4i0e86wwuhrc69are87h6tk&st=fnnh2ee6&raw=1"
+    },
+    {
+      "tier": 0,
+      "maxSeconds": 100,
+      "url": "https://www.dropbox.com/scl/fi/r6rmmwvqpfuytw5af27z7/Donut.jpg?rlkey=m0cxspqefhfe7vf5o3ojidlgo&st=uenghmz9&raw=1"
+    },
+    {
+      "tier": -1,
+      "maxSeconds": 999,
+      "url": "https://www.dropbox.com/scl/fi/4iogg3n215pwedcp474ie/OKB.jpg?rlkey=wpnrqcsvx710zpef25ndueh3j&st=q3k13ave&raw=1"
+    }
+  ],
+  "5B": [
+    {
+      "tier": 2,
+      "maxSeconds": 45,
+      "url": "https://www.dropbox.com/scl/fi/zjv1tzzliacc2lvr3fmeg/2Stickers.jpg?rlkey=lzodgyctwbn1ao03em9zcg1wr&st=glyacksq&raw=1"
+    },
+    {
+      "tier": 1,
+      "maxSeconds": 70,
+      "url": "https://www.dropbox.com/scl/fi/uw4bv9phwt6bsy1r0ejwh/1Sticker.jpg?rlkey=kf4i0e86wwuhrc69are87h6tk&st=fnnh2ee6&raw=1"
+    },
+    {
+      "tier": 0,
+      "maxSeconds": 100,
+      "url": "https://www.dropbox.com/scl/fi/r6rmmwvqpfuytw5af27z7/Donut.jpg?rlkey=m0cxspqefhfe7vf5o3ojidlgo&st=uenghmz9&raw=1"
+    },
+    {
+      "tier": -1,
+      "maxSeconds": 999,
+      "url": "https://www.dropbox.com/scl/fi/4iogg3n215pwedcp474ie/OKB.jpg?rlkey=wpnrqcsvx710zpef25ndueh3j&st=q3k13ave&raw=1"
+    }
+  ]
+};
+
+const suppData = {};
+
+// --- NEW: SMART IFRAME LOADER (Upgraded for Minimal Render) ---
+  // Paste your Dropbox link here ONCE. 
+ // const coverImageUrl = "PASTE_YOUR_COVER_IMAGE_DROPBOX_LINK?raw=1"; 
+
+  function changeLesson(url) {
+    const lessonFrame = document.getElementById("lessonFrame");
+    
+    if (url === "COVER") {
+      // Injects a mini webpage to force the image to fit perfectly inside the iframe
+      lessonFrame.removeAttribute("src");
+      lessonFrame.srcdoc = `<body style="margin:0; display:flex; justify-content:center; align-items:center; background:#ffffff;"><img src="${coverImageUrl}" style="max-width:100%; max-height:100%; object-fit:contain;"></body>`;
+    } else {
+      // Clears the custom code and loads the Google Slide
+      lessonFrame.removeAttribute("srcdoc");
+      
+      // 🚀 AUTOMATIC CONTROL BAR REMOVAL
+      let finalUrl = url;
+      if (finalUrl.includes('/embed') && !finalUrl.includes('rm=minimal')) {
+         // Checks if a '?' already exists to prevent breaking the link formatting
+         finalUrl += finalUrl.includes('?') ? '&rm=minimal' : '?rm=minimal';
+      }
+      
+      lessonFrame.src = finalUrl;
+    }
+  }
+  // --- LESSON ROUTING LOGIC ---
+  function updateLessons() {
+    const levelSelect = document.getElementById("levelSelect").value;
+    const lessonSelect = document.getElementById("lessonSelect");
+    
+    lessonSelect.innerHTML = "";
+    
+    if (lessonData[levelSelect] && lessonData[levelSelect].length > 0) {
+      
+      // 1. INJECT THE DUMMY OPTION
+      let defaultOption = document.createElement("option");
+      defaultOption.text = "✨ Select a Lesson...";
+      defaultOption.value = "COVER"; // Triggers the custom image CSS
+      lessonSelect.appendChild(defaultOption);
+
+      // 2. POPULATE THE REAL LESSONS
+      lessonData[levelSelect].forEach(lesson => {
+        let option = document.createElement("option");
+        option.value = lesson.url;
+        option.text = lesson.name;
+        lessonSelect.appendChild(option);
+      });
+      
+      // 3. AUTO-LOAD THE RESPONSIVE COVER IMAGE
+      changeLesson("COVER");
+      
+    } else {
+      changeLesson("");
+    }
+    
+    updateSupps(levelSelect);
+  }
+
+  function updateSupps(levelSelect) {
+    const suppSelect = document.getElementById("suppSelect");
+    suppSelect.innerHTML = "<option value=''>Select Supplemental File...</option>";
+    if (suppData[levelSelect]) {
+      suppData[levelSelect].forEach(supp => {
+        let option = document.createElement("option");
+        option.value = supp.url;
+        option.text = supp.name;
+        suppSelect.appendChild(option);
+      });
+    }
+  }
+
+  // --- MEME BUILDER ---
+  function buildMemeButtons() {
+    const container = document.getElementById("memeButtonContainer");
+    container.innerHTML = "";
+    memeData.forEach(meme => {
+      let btn = document.createElement("button");
+      let buttonText = meme.name;
+      if (meme.shortcut) buttonText += " [" + meme.shortcut.toUpperCase() + "]";
+      btn.innerText = buttonText;
+      btn.style.cssText = "padding: 10px 6px; cursor: pointer; border-radius: 4px; border: 1px solid #ccc; background: #fff; font-weight: bold; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);";
+      btn.onclick = function() { openModal(meme.url); }; 
+      container.appendChild(btn);
+    });
+  }
+// --- SECRET MEME PRELOADER ---
+  // Forces the browser to download and cache images in the background instantly
+  function preloadMemes() {
+    memeData.forEach(meme => {
+      if (meme.url) {
+        const tempImg = new Image();
+        tempImg.src = meme.url;
+      }
+    });
+    
+    // Pro-Tip: We can also preload the stopwatch background and cover image here
+    if (typeof coverImageUrl !== 'undefined') {
+      const coverImg = new Image();
+      coverImg.src = coverImageUrl;
+    }
+  }
+
+  // --- NEW: IMAGE PRELOADER CACHE ---
+  // The browser will quietly download these in the background as soon as the page opens.
+  
+  const memonadeImage = new Image();
+  memonadeImage.src = "https://www.dropbox.com/scl/fi/r7z4gl89hobrh3ft4kf6o/Memo.jpg?rlkey=k3cf5ruxd91mmm20t0t45upky&st=tt1pgz2h&raw=1"; 
+
+  // You can copy and paste those two lines for any other meme buttons you have!
+  // const anotherMeme = new Image();
+  // anotherMeme.src = "YOUR_OTHER_URL_HERE";
+
+
+// --- MODAL LOGIC (Upgraded for Text Overlays) ---
+  function openModal(imageSrc, overlayText = "") {
+    document.getElementById('modalImage').src = imageSrc;
+    
+    // Check if we sent text (like from the stopwatch) or just an image (like a meme button)
+    const textElement = document.getElementById('modalTextOverlay');
+    if (overlayText !== "") {
+      textElement.innerText = overlayText;
+      textElement.style.display = "block";
+    } else {
+      textElement.style.display = "none";
+      textElement.innerText = "";
+    }
+
+    document.getElementById('imageModal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('imageModal').style.display = 'none';
+    document.getElementById('modalImage').src = "";
+    document.getElementById('modalTextOverlay').innerText = ""; // Clear the text
+  }
+  // --- KEYBOARD LISTENER ---
+  document.addEventListener('keydown', function(event) {
+    if (event.key === "Escape") { closeModal(); return; }
+    if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA") return; 
+    const matchedMeme = memeData.find(meme => meme.shortcut === event.key.toLowerCase());
+    if (matchedMeme) openModal(matchedMeme.url);
+  });
+
+  // --- STOPWATCH LOGIC ---
+  let timerInterval, startTime, elapsedTime = 0, isRunning = false;
+  function startStopwatch() {
+    if (isRunning) return;
+    isRunning = true;
+    startTime = Date.now() - elapsedTime;
+timerInterval = setInterval(function() {
+      elapsedTime = Date.now() - startTime;
+      updateStopwatchDisplay(elapsedTime);
+    }, 10); // Wakes up the screen every 10 milliseconds instead!
+  }
+  function stopStopwatch() {
+    if (!isRunning) return;
+    isRunning = false;
+    clearInterval(timerInterval);
+    checkStopwatchReward(elapsedTime / 1000);
+  }
+function resetStopwatch() {
+    isRunning = false;
+    clearInterval(timerInterval);
+    elapsedTime = 0;
+    updateStopwatchDisplay(elapsedTime);
+    
+// --- NEW: RESET PENALTIES AND SCORECARD (2 Decimals) ---
+    penaltyCount = 0;
+    document.getElementById('penaltyDisplay').innerText = "0 (+0.00s)";
+    document.getElementById("rawTimeDisplay").innerText = "0.00s";
+    document.getElementById("penaltyTimeDisplay").innerText = "+0.00s";
+    document.getElementById("finalScoreDisplay").innerText = "0.00s";
+  }
+
+function updateStopwatchDisplay(time) {
+    let minutes = Math.floor(time / 60000);
+    let seconds = Math.floor((time % 60000) / 1000);
+    let hundredths = Math.floor((time % 1000) / 10); // Calculates exactly 2 decimal places
+
+    // .padStart(2, "0") forces the number to always have 2 digits!
+    let m = minutes.toString().padStart(2, "0");
+    let s = seconds.toString().padStart(2, "0");
+    let ms = hundredths.toString().padStart(2, "0");
+
+    document.getElementById("stopwatchDisplay").innerText = `${m}:${s}.${ms}`;
+  }
+function checkStopwatchReward(finalSeconds) {
+    let totalPenaltyTime = penaltyCount * PENALTY_SECONDS;
+    let adjustedSeconds = finalSeconds + totalPenaltyTime;
+
+// --- NEW: UPDATE PERMANENT SCORECARD (Forced 2 Decimals) ---
+    document.getElementById("rawTimeDisplay").innerText = finalSeconds.toFixed(2) + "s";
+    document.getElementById("penaltyTimeDisplay").innerText = "+" + totalPenaltyTime.toFixed(2) + "s";
+    document.getElementById("finalScoreDisplay").innerText = adjustedSeconds.toFixed(2) + "s";
+
+    // 1. Find out what class we are currently teaching
+    const currentLevel = document.getElementById("levelSelect").value;
+    
+    // 2. Pull only the times for this specific class
+    const levelRewards = stopwatchData[currentLevel];
+
+    // Safety Gate: If no times are programmed for this level, do nothing
+    if (!levelRewards || levelRewards.length === 0) return; 
+
+    // 3. Find the exact tier they landed in
+    let reward = levelRewards.find(tier => adjustedSeconds <= tier.maxSeconds);
+    
+    // 4. If they took forever and missed all thresholds, give them the last (slowest) image
+    if (!reward) reward = levelRewards[levelRewards.length - 1];
+
+// 5. Fire the modal with the final score!
+    openModal(reward.url, "Time: " + adjustedSeconds.toFixed(2) + "s");
+    }
+
+// --- NEW: PENALTY TRACKING SYSTEM ---
+  let penaltyCount = 0;
+  const PENALTY_SECONDS = 5;
+
+  function changePenalty(amount) {
+    penaltyCount += amount;
+    
+    // Safety Gate: Prevent the teacher from accidentally going into negative penalties
+    if (penaltyCount < 0) {
+      penaltyCount = 0; 
+    }
+    
+    const addedSeconds = penaltyCount * PENALTY_SECONDS;
+    document.getElementById('penaltyDisplay').innerText = `${penaltyCount} (+${addedSeconds}s)`;
+  }
+
+  // --- MODULAR RIGHT COLUMN LOGIC ---
+  function switchModule(moduleId) {
+    document.getElementById('moduleA').classList.add('hidden');
+    document.getElementById('moduleB').classList.add('hidden');
+    // Remove the hidden class from the requested module, changing it back to flex
+    const activeModule = document.getElementById(moduleId);
+    activeModule.classList.remove('hidden');
+    activeModule.style.display = 'flex';
+  }
+
+ // --- INITIALIZE SYSTEM ---
+  window.onload = function() {
+    updateLessons();      
+    buildMemeButtons();   
+    preloadMemes(); // <--- Downloads images silently in the background
+  };
+
+// --- NEW: PROJECTOR SHIELD LOGIC ---
+  function toggleLights() {
+    const shadow = document.getElementById("classroomShadow");
+    if (shadow.style.display === "none") {
+      shadow.style.display = "block";
+    } else {
+      shadow.style.display = "none";
+    }
+  }
+
+ // --- NEW: BULLETPROOF DRAGGABLE MEMONADE PAD LOGIC ---
+  let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
+
+  document.addEventListener("mousedown", dragStart);
+  document.addEventListener("mousemove", drag);
+  document.addEventListener("mouseup", dragEnd);
+
+  function dragStart(e) {
+    const header = document.getElementById("memonadeHeader");
+    if (!header) return; // Safety check
+    
+    if (e.target === header || e.target.parentNode === header) {
+      initialX = e.clientX - xOffset;
+      initialY = e.clientY - yOffset;
+      isDragging = true;
+      header.style.cursor = "grabbing";
+    }
+  }
+
+  function drag(e) {
+    if (isDragging) {
+      e.preventDefault();
+      currentX = e.clientX - initialX;
+      currentY = e.clientY - initialY;
+      xOffset = currentX;
+      yOffset = currentY;
+      document.getElementById("memonadePad").style.transform = `translate(${currentX}px, ${currentY}px)`;
+    }
+  }
+
+  function dragEnd(e) {
+    initialX = currentX;
+    initialY = currentY;
+    isDragging = false;
+    const header = document.getElementById("memonadeHeader");
+    if (header) header.style.cursor = "grab";
+  }
+
+  // --- THE SEQUENCE TRIGGER ---
+  function triggerMemonade(imageUrl) {
+    // 1. Flash the Meme Image
+    openModal(imageUrl);
+    
+    // 2. Wait 2.5 seconds
+    setTimeout(() => {
+      closeModal(); 
+      // 3. Find the pad right now, and open it!
+      const pad = document.getElementById("memonadePad");
+      if (pad) {
+        pad.style.display = "flex";
+        document.getElementById("memonadeText").focus(); 
+      }
+    }, 2500);
+  }
+
+  function closeMemonadePad() {
+    document.getElementById("memonadePad").style.display = "none";
+  }
+
+// --- NEW: COLUMN FOCUS TRACKER ---
+  function setActiveColumn(columnId) {
+    // 1. Remove the glow class from all columns
+    document.getElementById('leftColumn').classList.remove('active-column-glow');
+    document.getElementById('centerColumn').classList.remove('active-column-glow');
+    document.getElementById('rightColumn').classList.remove('active-column-glow');
+    
+    // 2. Add the glow strictly to the targeted column
+    document.getElementById(columnId).classList.add('active-column-glow');
+  }
+
+// --- UPGRADED: BULLETPROOF RADAR POLLER (IFRAME TUNNELING FIX) ---
+  let currentActiveIframe = null;
+
+  // This sets up a tiny background loop that checks focus 10 times a second
+  setInterval(function() {
+    // 1. Check if the computer's focus is currently trapped inside ANY iframe
+    if (document.activeElement instanceof HTMLIFrameElement) {
+      let activeId = document.activeElement.id;
+      
+      // 2. If the focus just jumped to a NEW iframe, update the glow!
+      if (activeId !== currentActiveIframe) {
+        currentActiveIframe = activeId;
+        
+        if (activeId === 'lessonFrame') {
+          setActiveColumn('centerColumn');
+        } else if (activeId === 'suppFrame') {
+          setActiveColumn('rightColumn');
+        }
+      }
+    } else {
+      // 3. If they click back onto the main dashboard background, clear the memory
+      currentActiveIframe = null;
+    }
+  }, 100);
+  
+</script>
+<div id="memonadePad" style="display: none; position: fixed; top: 15%; left: 25%; width: 600px; height: 450px; background: #fff; border: 5px solid #640000; border-radius: 8px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); z-index: 2000; flex-direction: column; resize: both; overflow: hidden; min-width: 300px; min-height: 200px;">
+    
+    <div id="memonadeHeader" style="background: #640000; padding: 5px; border-radius: 6px 6px 0 0; cursor: grab; font-weight: bold; display: flex; justify-content: space-between; align-items: center; color: #ffffff; font-size: 20px;">
+      <span>📘 Memonade Pad</span>
+      <button onclick="closeMemonadePad()" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: #dc3545; font-weight: bold;">✖</button>
+    </div>
+    
+    <textarea id="memonadeText" style="width: 100%; flex-grow: 1; border: none; padding: 15px; font-size: 24px; resize: none; outline: none; box-sizing: border-box; font-family: 'Comic Sans MS', sans-serif;" placeholder="Type your class notes here..."></textarea>
+  </div>
+
+<div id="classroomShadow" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); pointer-events: none; z-index: 50; transition: opacity 0.3s;"></div>
+</body>
+</html>
