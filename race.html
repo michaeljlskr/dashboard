@@ -42,7 +42,7 @@
         .menu-box {
             pointer-events: auto; 
             background: rgba(0, 0, 0, 0.85);
-            padding: 30px;
+            ding: 30px;
             border-radius: 12px;
             border: 2px solid #555;
             text-align: center;
@@ -61,7 +61,7 @@
         textarea {
             width: 100%;
             box-sizing: border-box;
-            padding: 10px;
+            ding: 10px;
             font-family: inherit;
             font-size: 16px;
             border-radius: 6px;
@@ -74,7 +74,7 @@
         #control-bar {
             background: rgba(0, 0, 0, 0.9);
             border-top: 2px solid #555;
-            padding: 15px 30px;
+            ding: 15px 30px;
             pointer-events: auto;
             display: flex;
             align-items: center;
@@ -99,7 +99,7 @@
             pointer-events: auto;
             color: white;
             border: none;
-            padding: 12px 24px;
+            ding: 12px 24px;
             font-size: 16px;
             font-weight: bold;
             border-radius: 6px;
@@ -110,7 +110,7 @@
         button:hover { filter: brightness(1.2); transform: scale(1.05); }
         button:active { transform: scale(0.95); }
         
-        button.primary { background: #4CAF50; font-size: 18px; padding: 12px 30px;}
+        button.primary { background: #4CAF50; font-size: 18px; ding: 12px 30px;}
         button.success { background: #4CAF50; } 
         button.danger { background: #f44336; }
         button.warning { background: #ff9800; color: #222; }
@@ -123,7 +123,7 @@
             text-align: left; 
             margin-bottom: 20px;
             overflow-y: auto; 
-            padding-right: 10px;
+            ding-right: 10px;
             flex-grow: 1;
         }
 
@@ -137,7 +137,7 @@
             justify-content: space-between;
             background: rgba(255,255,255,0.1);
             margin-bottom: 8px;
-            padding: 8px 12px;
+            ding: 8px 12px;
             border-radius: 6px;
         }
         .remove-label {
@@ -148,7 +148,7 @@
             align-items: center;
             gap: 8px;
             background: rgba(0,0,0,0.4);
-            padding: 5px 10px;
+            ding: 5px 10px;
             border-radius: 4px;
         }
         .remove-label:hover { background: rgba(0,0,0,0.6); }
@@ -166,7 +166,7 @@
         <div id="roster-menu" class="menu-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h2 style="margin: 0;">Class Roster</h2>
-                <button id="btn-restore-roster" class="warning" style="padding: 6px 12px; font-size: 14px;">↺ RESTORE REMOVED</button>
+                <button id="btn-restore-roster" class="warning" style="ding: 6px 12px; font-size: 14px;">↺ RESTORE REMOVED</button>
             </div>
             <p style="margin-top:0; color:#ccc; text-align: left;">Paste your student names (one per line):</p>
             
@@ -710,7 +710,7 @@ function prepareNextRace() {
                     const nameWidth = ctx.measureText(racer.id).width;
                     
                     const pad = 5;
-                    const gap = -125; // The distance between the baguette and the name tag
+                    const gap = -100; // The distance between the baguette and the name tag
                     
                     // Subtract the name width, the padding, and the gap to put it behind the racer
                     const tagX = racer.x - nameWidth - (pad * 2) - gap; 
