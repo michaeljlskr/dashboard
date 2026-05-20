@@ -351,8 +351,9 @@ const assets = {
     // ==========================================
 
     const topMargin = 250; 
+    const bottomMargin = 80; // ⬅️ NEW: Adds breathing room at the bottom of the screen!
     let numLanes = 1; 
-    let laneHeight = 0; 
+    let laneHeight = 0;
     
     const globalCharacterScale = 1.70; 
     const characterYOffset = 15;      
@@ -496,8 +497,10 @@ const assets = {
 function resizeCanvas() {
         const gameArea = document.getElementById('game-area');
         canvas.width = gameArea.clientWidth;
-        canvas.height = gameArea.clientHeight; // Now it stops exactly where the control bar begins!
-        laneHeight = (canvas.height - topMargin) / Math.max(1, numLanes);
+        canvas.height = gameArea.clientHeight; 
+        
+        // ⬅️ UPDATED: Subtract the bottomMargin so the final lane doesn't touch the UI bar
+        laneHeight = (canvas.height - topMargin - bottomMargin) / Math.max(1, numLanes);
     }
     
     function initGame() {
