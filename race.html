@@ -5,26 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baguette Run</title>
     <style>
-        body {
+       body {
             margin: 0;
             padding: 0;
             overflow: hidden; 
             background-color: #222;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column; /* Stacks everything top-to-bottom */
             height: 100vh;
             color: white;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
+        #game-area {
+            position: relative;
+            flex-grow: 1; /* Forces the game to fill all space above the control bar */
+            width: 100%;
+            overflow: hidden;
+        }
+
         canvas {
             background-color: #ffcc99; 
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
             position: absolute;
+            top: 0; left: 0;
             z-index: 1;
         }
+        
         #loading {
             position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
             font-size: 24px;
             z-index: 100;
         }
@@ -35,8 +45,8 @@
             z-index: 10;
             pointer-events: none; 
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
+            align-items: center;
         }
 
         .menu-box {
@@ -158,50 +168,51 @@
 </head>
 <body>
 
-    <div id="loading">Loading Assets...</div>
-    <canvas id="gameCanvas" style="display: none;"></canvas>
+    <div id="game-area">
+        <div id="loading">Loading Assets...</div>
+        <canvas id="gameCanvas" style="display: none;"></canvas>
 
-    <div id="ui-layer" style="display: none;">
-        
-        <div id="roster-menu" class="menu-box">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h2 style="margin: 0;">Class Roster</h2>
-                <button id="btn-restore-roster" class="warning" style="ding: 6px 12px; font-size: 14px;">↺ RESTORE REMOVED</button>
-            </div>
-            <p style="margin-top:0; color:#ccc; text-align: left;">Paste your student names (one per line):</p>
+        <div id="ui-layer" style="display: none;">
             
-            <textarea id="roster-input" rows="10" placeholder="Paste your student names here..."></textarea>
-            <button id="btn-save-roster" class="save">SAVE ROSTER & START</button>
-        </div>
-
-        <div id="finish-menu" class="menu-box" style="display: none; min-width: 450px;">
-            <h2 style="font-size: 32px; margin-bottom: 20px;">🏁 RACE FINISHED!</h2>
-            <div id="results-list"></div>
-            <button id="btn-next-race" class="primary" style="width: 100%; flex-shrink: 0;">START NEXT RACE</button>
-        </div>
-
-        <div></div>
-        <div id="control-bar" style="display: none;">
-            
-            <div id="setup-controls">
-                <button id="btn-edit-roster" class="secondary">📋 EDIT ROSTER</button>
-                <button id="btn-reroll" class="secondary">🎲 COSTUME CHANGE</button>
-                <button id="btn-length" class="secondary">⏱️ LENGTH: Short (5s)</button>
-                <button id="btn-start" class="primary">▶️ START RACE</button>
-            </div>
-            
-            <div id="race-controls" style="display: none;">
-                <button id="btn-pause" class="warning">⏸️ PAUSE</button>
-                <button id="btn-reset" class="danger">⏹️ ABORT</button>
+            <div id="roster-menu" class="menu-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="margin: 0;">Class Roster</h2>
+                    <button id="btn-restore-roster" class="warning" style="padding: 6px 12px; font-size: 14px;">↺ RESTORE REMOVED</button>
+                </div>
+                <p style="margin-top:0; color:#ccc; text-align: left;">Paste your student names (one per line):</p>
                 
-                <div style="flex-grow: 1; margin-left: 20px; text-align: left;">
-                    <div style="margin-bottom: 5px; font-weight: bold; font-size: 14px; color: #ccc;">RACE PROGRESS</div>
-                    <div style="background: rgba(255,255,255,0.2); border-radius: 8px; height: 20px; width: 100%; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);">
-                        <div id="progress-bar-fill" style="background: #4CAF50; height: 100%; width: 0%; transition: width 0.1s linear;"></div>
-                    </div>
+                <textarea id="roster-input" rows="10" placeholder="Paste your student names here..."></textarea>
+                <button id="btn-save-roster" class="save">SAVE ROSTER & START</button>
+            </div>
+
+            <div id="finish-menu" class="menu-box" style="display: none; min-width: 450px;">
+                <h2 style="font-size: 32px; margin-bottom: 20px;">🏁 RACE FINISHED!</h2>
+                <div id="results-list"></div>
+                <button id="btn-next-race" class="primary" style="width: 100%; flex-shrink: 0;">START NEXT RACE</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="control-bar" style="display: none;">
+        
+        <div id="setup-controls">
+            <button id="btn-edit-roster" class="secondary">📋 EDIT ROSTER</button>
+            <button id="btn-reroll" class="secondary">🎲 COSTUME CHANGE</button>
+            <button id="btn-length" class="secondary">⏱️ LENGTH: Short (5s)</button>
+            <button id="btn-start" class="primary">▶️ START RACE</button>
+        </div>
+        
+        <div id="race-controls" style="display: none;">
+            <button id="btn-pause" class="warning">⏸️ PAUSE</button>
+            <button id="btn-reset" class="danger">⏹️ ABORT</button>
+            
+            <div style="flex-grow: 1; margin-left: 20px; text-align: left;">
+                <div style="margin-bottom: 5px; font-weight: bold; font-size: 14px; color: #ccc;">RACE PROGRESS</div>
+                <div style="background: rgba(255,255,255,0.2); border-radius: 8px; height: 20px; width: 100%; overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);">
+                    <div id="progress-bar-fill" style="background: #4CAF50; height: 100%; width: 0%; transition: width 0.1s linear;"></div>
                 </div>
             </div>
-
         </div>
 
     </div>
