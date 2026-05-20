@@ -721,7 +721,7 @@ function prepareNextRace() {
 
             if (gameState !== "ROSTER_SETUP") {
                 racers.filter(r => r.lane === l).forEach((racer, index) => {
-                    const currentWobble = (!rankingsLocked && (gameState === "RACING" || gameState === "CROSSING")) ? Math.sin(timestamp / wobbleSpeed + racer.lane) * wobbleHeight : 0; 
+                   const currentWobble = (gameState === "RACING" || gameState === "CROSSING") ? Math.sin(timestamp / wobbleSpeed + racer.lane) * wobbleHeight : 0;
                     
                     const dynamicScale = referenceLaneHeight / racer.img.height;
                     const finalDrawWidth = (racer.img.width * dynamicScale) * globalCharacterScale;
