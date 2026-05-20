@@ -493,12 +493,12 @@ const assets = {
         }
     });
 
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+function resizeCanvas() {
+        const gameArea = document.getElementById('game-area');
+        canvas.width = gameArea.clientWidth;
+        canvas.height = gameArea.clientHeight; // Now it stops exactly where the control bar begins!
         laneHeight = (canvas.height - topMargin) / Math.max(1, numLanes);
     }
-    window.addEventListener('resize', resizeCanvas);
     
     function initGame() {
         resizeCanvas(); 
