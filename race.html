@@ -605,15 +605,26 @@ function prepareNextRace() {
             if (!rankingsLocked && finishLineX <= canvas.width * 0.6) {
                 rankingsLocked = true;
                 
-                const getEffectiveScore = (racer) => {
+               const getEffectiveScore = (racer) => {
                     const currentLaneYBase = topMargin + ((racer.lane + 1) * laneHeight);
-                    const referenceLaneHeight = (canvas.height - topMargin) / 6;
+                    
+                    // Bring in the bottomMargin so the scale matches perfectly
+                    const bottomMargin = 80; 
+                    const referenceLaneHeight = (canvas.height - topMargin - bottomMargin) / 6;
+                    
                     const dynamicScale = referenceLaneHeight / racer.img.height;
+                    
+                    // NEW: We need to calculate the width of the racer to find their nose!
+                    const finalDrawWidth = (racer.img.width * dynamicScale) * globalCharacterScale;
                     const finalDrawHeight = (racer.img.height * dynamicScale) * globalCharacterScale;
                     
                     const racerY = currentLaneYBase - finalDrawHeight + characterYOffset; 
                     const relativeY = racerY - topMargin;
-                    return racer.x + (0.4 * relativeY);
+                    
+                    // 🎯 THE FIX: Track the position at 85% of the image width (the Nose) instead of 0% (the Tail)
+                    const racerNoseX = racer.x + (finalDrawWidth * 0.85);
+                    
+                    return racerNoseX + (0.4 * relativeY);
                 };
 
                 rankedResults = [...racers].sort((a, b) => getEffectiveScore(b) - getEffectiveScore(a));
