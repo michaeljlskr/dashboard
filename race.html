@@ -170,14 +170,7 @@
             </div>
             <p style="margin-top:0; color:#ccc; text-align: left;">Paste your student names (one per line):</p>
             
-            <textarea id="roster-input" rows="10">1
-2
-3
-4
-5
-6
-7
-8</textarea>
+            <textarea id="roster-input" rows="10" placeholder="Paste your student names here..."></textarea>
             <button id="btn-save-roster" class="save">SAVE ROSTER & START</button>
         </div>
 
@@ -192,6 +185,7 @@
             
             <div id="setup-controls">
                 <button id="btn-edit-roster" class="secondary">📋 EDIT ROSTER</button>
+                <button id="btn-reroll" class="secondary">🎲 COSTUME CHANGE</button>
                 <button id="btn-length" class="secondary">⏱️ LENGTH: Short (5s)</button>
                 <button id="btn-start" class="primary">▶️ START RACE</button>
             </div>
@@ -229,26 +223,75 @@
     
     const btnEditRoster = document.getElementById('btn-edit-roster');
     const btnRestoreRoster = document.getElementById('btn-restore-roster');
+    const btnReroll = document.getElementById('btn-reroll'); // <-- NEW BUTTON
     const btnLength = document.getElementById('btn-length');
     const btnStart = document.getElementById('btn-start');
     const btnPause = document.getElementById('btn-pause');
     const btnReset = document.getElementById('btn-reset');
     const btnNextRace = document.getElementById('btn-next-race');
 
-    const assets = {
+    // ==========================================
+    // LIVE DATA PIPELINE SETUP
+    // ==========================================
+    
+    const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyzIMJoi1ZkBEoVYRUyMURhrGGUU1G7RXEXmPDTGCxvqkiJQHM2mV3Y46FR8VwgZQRC/exec"; 
+    
+    // The bucket that will hold all our custom AI images
+    let baguetteBucket = []; 
+
+const assets = {
         bg: new Image(),
         track: new Image(),
         wall: new Image(),
         start: new Image(),
-        ninja: new Image(),
-        king: new Image()
+        ninja: new Image() // The solo fallback!
     };
+
+    // NEW: Give all the environment assets the VIP Pass so Dropbox allows them!
+    for (let key in assets) {
+        assets[key].crossOrigin = "Anonymous";
+    }
 
     let assetsLoaded = 0;
     const totalAssets = Object.keys(assets).length;
 
-    for (let key in assets) {
-        assets[key].onload = () => {
+    // STEP 1: Fetch the data from Google Sheets first
+    async function loadDataFromSheets() {
+        loadingMsg.innerText = "Loading Image Bucket from Sheets...";
+        
+        try {
+            const response = await fetch(SHEET_API_URL);
+            const data = await response.json();
+            
+            baguetteBucket = []; // Clear the bucket
+
+            data.forEach(row => {
+                // We ONLY care about the image links now! The sheet is just a bucket of costumes.
+                if (row.imgUrl && row.imgUrl.trim() !== "") {
+                    let customImg = new Image();
+                    customImg.crossOrigin = "Anonymous"; // VIP PASS
+                    customImg.src = row.imgUrl;
+                    baguetteBucket.push(customImg);
+                }
+            });
+            
+            console.log(`Loaded ${baguetteBucket.length} custom images into the bucket.`);
+            
+            // Move on to loading standard background assets
+            loadGameAssets();
+
+        } catch (error) {
+            console.error("Failed to load from Sheets. Check URL or permissions.", error);
+            loadingMsg.innerText = "Error loading data. Playing with default roster.";
+            loadGameAssets();
+        }
+    }
+
+    // STEP 2: Load the standard background/fallback graphics
+    function loadGameAssets() {
+        loadingMsg.innerText = "Loading Graphics...";
+        
+        function checkReady() {
             assetsLoaded++;
             if (assetsLoaded === totalAssets) {
                 loadingMsg.style.display = 'none';
@@ -256,26 +299,51 @@
                 uiLayer.style.display = 'flex'; 
                 initGame();
             }
-        };
-        assets[key].onerror = () => {
-            console.error(`Failed to load: ${key}`);
-        };
+        }
+
+        for (let key in assets) {
+            assets[key].onload = () => {
+                checkReady();
+            };
+            assets[key].onerror = () => {
+                console.error(`Failed to load fallback: ${key}. Skipping...`);
+                checkReady(); // Count it even if it fails, preventing the freeze!
+            };
+        }
+
+// NEW: A mini link-scrubber so you can paste raw Dropbox links!
+        function cleanLink(url) {
+            return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com').replace('&dl=0', '').replace('?dl=0', '');
+        }
+
+        // ⚠️ PASTE YOUR RAW DROPBOX LINKS HERE ⚠️
+        assets.bg.src = cleanLink('https://www.dropbox.com/scl/fi/z528ijv9qafp5qil78538/mountain.png?rlkey=8ha7w2ybry46iflbkkaefc2km&st=phv3i3oa&dl=0'); 
+        assets.track.src = cleanLink('https://www.dropbox.com/scl/fi/4jrjmu60ddjftq6zmag2g/track.jpg?rlkey=47tiqh5p1pclfmygmbxfajxbi&st=f7yptm5t&dl=0');
+        assets.wall.src = cleanLink('https://www.dropbox.com/scl/fi/p1ii4byb2lt5a3sdxp2ta/wall.png?rlkey=s5015lu9yvpj43zfg32rry3h7&st=q2tka5cy&dl=0'); 
+        assets.start.src = cleanLink('https://www.dropbox.com/scl/fi/k6rxp5yzti8508rj0c0ar/start.jpg?rlkey=wrgkb2ayjbdks0y06dik5fchm&st=k0ugkyt0&dl=0');
+        
+        // (Optional) Your fallback ninja link
+        assets.ninja.src = cleanLink('https://www.dropbox.com/scl/fi/ds8o7v9btwiosubueo2te/original.png?rlkey=9seyrmsmtlxt9mqfmqbhi4s6k&st=2xtmpccp&dl=0');
     }
 
-    // EASY ASSET SWAPPING: Just change these filenames when you make new art!
-    assets.bg.src = 'mountain.png'; 
-    assets.track.src = 'track.jpg';
-    assets.wall.src = 'wall.png'; 
-    assets.start.src = 'start.jpg';
-    assets.ninja.src = 'ninja.png';
-    assets.king.src = 'sejong.png';
+    // KICK OFF THE ENTIRE LOADING PROCESS!
+    if (SHEET_API_URL === "YOUR_WEB_APP_URL_HERE") {
+        alert("Don't forget to paste your Google Web App URL into the code!");
+        loadGameAssets(); 
+    } else {
+        loadDataFromSheets();
+    }
 
-    // --- GAME CONFIGURATION ---
+
+    // ==========================================
+    // CORE GAME LOGIC
+    // ==========================================
+
     const topMargin = 250; 
     let numLanes = 1; 
     let laneHeight = 0; 
     
-    const globalCharacterScale = 1.25; 
+    const globalCharacterScale = 1.70; 
     const characterYOffset = 15;      
     const wobbleSpeed = 120;  
     const wobbleHeight = 6.0; 
@@ -291,7 +359,6 @@
     let currentDurationIndex = 0; 
     let raceDurationMs = durationOptions[currentDurationIndex].ms;
 
-    // --- GAME STATE ---
     let masterRoster = [];
     let activeRoster = [];
     
@@ -303,7 +370,6 @@
     let lastFrameTime = 0;
     let finishLineX = 0;
     
-    // NEW: Controls when the characters stop jockeying for the photo finish
     let rankingsLocked = false; 
     let rankedResults = [];
     
@@ -314,8 +380,7 @@
         '#E63946', '#A8DADC', '#457B9D', '#1D3557'
     ];
 
-    // --- UI EVENT LISTENERS ---
-
+    // UI EVENT LISTENERS
     document.getElementById('btn-save-roster').addEventListener('click', () => {
         const text = document.getElementById('roster-input').value;
         const currentInput = text.split('\n').map(name => name.trim()).filter(name => name.length > 0);
@@ -348,6 +413,23 @@
         gameState = "ROSTER_SETUP";
     });
 
+// COSTUME CHANGE BUTTON LOGIC
+    btnReroll.addEventListener('click', () => {
+        // Shuffle the image bucket like a deck of cards!
+        let shuffledBucket = [...baguetteBucket].sort(() => 0.5 - Math.random());
+        
+        racers.forEach((racer, index) => {
+            let assignedImg = assets.ninja; 
+            if (shuffledBucket.length > 0) {
+                // The '%' symbol loops back to the start of the deck if we run out of images
+                assignedImg = shuffledBucket[index % shuffledBucket.length];
+            }
+            racer.img = assignedImg;
+        });
+        
+        draw(performance.now());
+    });
+    
     btnLength.addEventListener('click', () => {
         currentDurationIndex = (currentDurationIndex + 1) % durationOptions.length;
         raceDurationMs = durationOptions[currentDurationIndex].ms;
@@ -400,8 +482,6 @@
         }
     });
 
-    // --- CORE LOGIC ---
-    
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -416,15 +496,23 @@
         requestAnimationFrame(gameLoop);
     }
 
-    function prepareNextRace() {
-        let shuffled = [...activeRoster].sort(() => 0.5 - Math.random());
-        numLanes = shuffled.length;
+function prepareNextRace() {
+        let shuffledNames = [...activeRoster].sort(() => 0.5 - Math.random());
+        // Shuffle the bucket for the starting line too!
+        let shuffledBucket = [...baguetteBucket].sort(() => 0.5 - Math.random());
+        
+        numLanes = shuffledNames.length;
         resizeCanvas();
 
-        racers = shuffled.map((name, index) => {
+        racers = shuffledNames.map((name, index) => {
+            let assignedImg = assets.ninja; 
+            if (shuffledBucket.length > 0) {
+                assignedImg = shuffledBucket[index % shuffledBucket.length];
+            }
+
             return {
                 id: name,
-                img: index % 2 === 0 ? assets.ninja : assets.king,
+                img: assignedImg,
                 lane: index,
                 x: 100,
                 targetX: 100
@@ -434,7 +522,7 @@
         cameraX = 0;
         accumulatedTime = 0;
         rankedResults = [];
-        rankingsLocked = false; // Reset the photo-finish lock
+        rankingsLocked = false; 
         progressBarFill.style.width = '0%';
         
         controlBar.style.display = 'flex';
@@ -446,7 +534,7 @@
 
         gameState = "READY";
     }
-
+    
     function gameLoop(timestamp) {
         update();
         draw(timestamp);
@@ -478,12 +566,10 @@
 
         let scrollSpeed = 8; 
 
-        // THE FINAL SPRINT FIX: They keep jockeying until rankingsLocked is true!
         let isJockeying = gameState === "RACING" || (gameState === "CROSSING" && !rankingsLocked);
 
         if (isJockeying) {
             racers.forEach(racer => {
-                // Tuned to 1.5% chance so they shift dynamically but smoothly
                 if (Math.random() < 0.015) {
                     racer.targetX = Math.random() * (canvas.width * 0.5) + 150; 
                 }
@@ -496,14 +582,12 @@
             if (accumulatedTime >= raceDurationMs) {
                 gameState = "CROSSING";
                 finishLineX = canvas.width; 
-                // They do NOT lock yet! They keep running!
             }
         } 
         else if (gameState === "CROSSING") {
             cameraX += scrollSpeed;
             finishLineX -= scrollSpeed; 
             
-            // LOCK RANKINGS when the physical finish line gets near the leaders (60% across screen)
             if (!rankingsLocked && finishLineX <= canvas.width * 0.6) {
                 rankingsLocked = true;
                 
@@ -596,9 +680,8 @@
         }
 
         const referenceLaneHeight = (canvas.height - topMargin) / 6;
-        const nameFontSize = 18; 
+        const nameFontSize = 28; 
 
-        // FIXED WALL HEIGHT: Walls are now locked to the 6-lane reference scale!
         const wallAspect = assets.wall.width / assets.wall.height;
         const targetWallHeight = referenceLaneHeight * wallScale; 
         const targetWallWidth = targetWallHeight * wallAspect;
@@ -613,7 +696,6 @@
 
             if (gameState !== "ROSTER_SETUP") {
                 racers.filter(r => r.lane === l).forEach((racer, index) => {
-                    // Wobble stops when rankings lock for the smooth photo finish
                     const currentWobble = (!rankingsLocked && (gameState === "RACING" || gameState === "CROSSING")) ? Math.sin(timestamp / wobbleSpeed + racer.lane) * wobbleHeight : 0; 
                     
                     const dynamicScale = referenceLaneHeight / racer.img.height;
@@ -626,12 +708,16 @@
 
                     ctx.font = `bold ${nameFontSize}px "Segoe UI", sans-serif`; 
                     const nameWidth = ctx.measureText(racer.id).width;
-                    const tagX = racer.x + (finalDrawWidth * 0.85); 
-                    const tagY = racerY + currentWobble + (finalDrawHeight * 0.2); 
+                    
+                    const pad = 5;
+                    const gap = -125; // The distance between the baguette and the name tag
+                    
+                    // Subtract the name width, the padding, and the gap to put it behind the racer
+                    const tagX = racer.x - nameWidth - (pad * 2) - gap; 
+                    const tagY = racerY + currentWobble + (finalDrawHeight * 0.35); 
 
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
                     ctx.beginPath();
-                    const pad = 8;
                     ctx.roundRect(tagX, tagY - nameFontSize, nameWidth + (pad*2), nameFontSize * 1.5, 6);
                     ctx.fill();
                     
@@ -655,7 +741,6 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
     }
-
 </script>
 </body>
 </html>
