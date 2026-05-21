@@ -66,7 +66,16 @@
             flex-direction: column;
         }
         
-        .menu-box h2 { margin-top: 0; color: #FFD700; flex-shrink: 0; }
+        .menu-box h2 {.menu-box h2 { margin-top: 0; color: #FFD700; flex-shrink: 0; }
+
+        /* 🎯 NEW: Move ONLY the finish menu to the right third of the screen */
+        #finish-menu {
+            left: auto; /* Tells it to ignore the center positioning */
+            right: 5%; /* Pins it 5% away from the right edge */
+            transform: translateY(-50%); /* Keeps it centered up-and-down, but not left-and-right */
+            width: 30%; /* Forces it to take up roughly a third of the screen */
+        }
+                     }
 
         textarea {
             width: 100%;
