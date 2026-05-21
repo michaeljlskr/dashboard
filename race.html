@@ -562,13 +562,13 @@ function prepareNextRace() {
         let deltaTime = now - lastFrameTime;
         lastFrameTime = now;
         
-      if (gameState === "RACING" || gameState === "CROSSING") {
+   if (gameState === "RACING" || gameState === "CROSSING") {
             let progress = 0;
             if (gameState === "RACING") {
                 progress = (accumulatedTime / raceDurationMs) * 90; 
             } else if (gameState === "CROSSING") {
-                // 🎯 THE FIX: Calculate 100% based on where the baguettes actually are (roughly 150px), not the edge of the screen!
-                const visualFinishX = 150; 
+                // 🎯 THE FIX: Target the exact spot where the race rankings lock (60% of the screen width)
+                const visualFinishX = canvas.width * 0.6; 
                 const crossingTotalDistance = canvas.width - visualFinishX;
                 const crossingDistanceCovered = canvas.width - finishLineX;
                 
