@@ -511,13 +511,17 @@ function resizeCanvas() {
         laneHeight = (canvas.height - topMargin - bottomMargin) / Math.max(1, numLanes);
     }
     
-    function initGame() {
+function initGame() {
         resizeCanvas(); 
         rosterMenu.style.display = 'block';
         controlBar.style.display = 'none';
+        
+        // 🎯 THE FIX: Force the cursor into the text box automatically!
+        document.getElementById('roster-input').focus();
+        
         requestAnimationFrame(gameLoop);
     }
-
+    
 function prepareNextRace() {
         let shuffledNames = [...activeRoster].sort(() => 0.5 - Math.random());
         // Shuffle the bucket for the starting line too!
